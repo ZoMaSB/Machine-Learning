@@ -1,0 +1,88 @@
+---
+title: "ML Project"
+date: "January 31, 2016"
+output: html_document
+---
+
+####**Background**
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. 
+
+In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+####**Data**
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+Required libraries (if not present on your machine please use install.packages ("libraryname") to install them)
+```{r}
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(RColorBrewer)
+library(rattle)
+library(randomForest)
+```
+
+####**Getting data**     
+```{r}
+training <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!", ""))
+testing <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!", ""))
+```
+
+####**Exploratory analysis**       
+
+```{r}
+#dim(training); dim(testing); summary(training); summary(testing); str(training); str(testing); head(training); #head(testing);               
+```
+
+####**Removing columns with all missing values**
+```{r}
+training<-training[,colSums(is.na(training)) == 0]
+testing <-testing[,colSums(is.na(testing)) == 0]
+
+# Removing irrelevant variables user_name, raw_timestamp_part_1, raw_timestamp_part_,2 cvtd_timestamp, new_window, and  num_window (columns 1 to 7). 
+training   <-training[,-c(1:7)]
+testing <-testing[,-c(1:7)]
+```
+
+
+####**Partition the data so that 80% of the training dataset into training and the remaining 20% to testing**
+```{r}
+traintrainset <- createDataPartition(y=training$classe, p=0.80, list=FALSE)
+TrainingSet <- training[traintrainset, ] 
+TestingSet <- training[-traintrainset, ]
+```
+
+####**Models and predictions**  
+```{r}
+model1 <- rpart(classe ~ ., data=TrainingSet, method="class")
+
+prediction1 <- predict(model1, TestingSet, type = "class")
+confusionMatrix(prediction1, TestingSet$classe)
+
+# Plot the Decision Tree
+rpart.plot(model1, main="Classification Tree", extra=102, under=TRUE, faclen=0)
+
+model2 <- randomForest(classe ~. , data=TrainingSet, method="class")
+
+# Predicting:
+prediction2 <- predict(model2, TestingSet, type = "class")
+confusionMatrix(prediction2, TestingSet$classe)
+```
+Model2 has higher accuracy 
+
+
+####**Final Prediction**
+```{r}
+finalprediction <- predict(model2, testing, type="class")
+finalprediction
+```
