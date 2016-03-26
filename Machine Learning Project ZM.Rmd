@@ -34,6 +34,10 @@ library(randomForest)
 
 ####**Getting data**     
 ```{r}
+download.file(url="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile="pml-training.csv", method="curl")
+download.file(url="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile="pml-testing.csv", method="curl")
+
+
 training <- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!", ""))
 testing <- read.csv("pml-testing.csv", na.strings=c("NA","#DIV/0!", ""))
 ```
@@ -85,4 +89,16 @@ Model2 has higher accuracy
 ```{r}
 finalprediction <- predict(model2, testing, type="class")
 finalprediction
+```
+
+####**Write the results to a text file for submission**
+```{r}
+pml_write_files = function(x){
+    n = length(x)
+    for(i in 1:n){
+        filename = paste0("problem_id_",i,".txt")
+        write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+    }
+}
+pml_write_files(finalprediction)
 ```
